@@ -24,10 +24,66 @@ export default function Dashboard({ user, setScreen, reminders = [], appointment
 
   return (
     <div>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+      {/* Hero Banner */}
+      <div className="glass-panel" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        padding: '0',
+        marginBottom: '28px',
+        borderRadius: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '180px',
+        background: 'linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%)'
+      }}>
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          padding: '32px',
+          color: '#ffffff',
+          maxWidth: '560px'
+        }}>
+          <span style={{
+            display: 'inline-block',
+            padding: '4px 12px',
+            borderRadius: '20px',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            fontSize: '12px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            marginBottom: '10px'
+          }}>
+            AI Health Portal 2.0
+          </span>
+          <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '28px', fontWeight: '800', marginBottom: '8px', color: '#ffffff' }}>
+            Welcome back, {user.name} 👋
+          </h1>
+          <p style={{ opacity: 0.9, fontSize: '15px', lineHeight: '1.5' }}>
+            Empowering your health journey with intelligent AI symptom analysis, medication reminders, and safety protocols.
+          </p>
+        </div>
+        <img 
+          src="/medical_hero.jpg" 
+          alt="AI Medical Assistant Banner" 
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: '50%',
+            objectFit: 'cover',
+            maskImage: 'linear-gradient(to right, transparent 0%, black 35%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 35%)',
+            pointerEvents: 'none'
+          }} 
+        />
+      </div>
+
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
-          <h1 className="page-title">Welcome back, {user.name}</h1>
-          <p className="page-subtitle">Here is your wellness overview for today.</p>
+          <h2 className="page-title" style={{ fontSize: '20px' }}>Daily Health Overview</h2>
+          <p className="page-subtitle">Quick access to your core medical tools</p>
         </div>
         <button className="btn btn-danger" onClick={() => setScreen('emergency')}>
           <PhoneCall size={16} /> Emergency Help

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Activity, 
   MessageSquare, 
@@ -6,17 +6,19 @@ import {
   BookOpen, 
   User, 
   PhoneCall, 
-  Settings, 
+  ShieldCheck, 
   LogOut, 
   Menu,
-  ShieldCheck,
   X,
-  CheckCircle,
   AlertTriangle,
-  Info
+  Info,
+  CheckCircle
 } from 'lucide-react';
 
-// Components
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider, useToast } from './context/ToastContext';
+
+// Screen Views
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import ChatBot from './components/ChatBot';
@@ -27,94 +29,27 @@ import Profile from './components/Profile';
 import Emergency from './components/Emergency';
 import AdminPanel from './components/AdminPanel';
 
-// Utilities
-import { getReminders, getAppointments } from './utils/mockData';
-
-export default function App() {
-  const [user, setUser] = useState(null);
+function AppContent() {
+  const { user, isAdmin, logout, reminders, appointments, refreshUserData, login, updateProfile } = useAuth();
+  const { triggerToast } = useToast();
   const [screen, setScreen] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [toasts, setToasts] = useState([]);
-  
-  // Dynamic user data
-  const [reminders, setReminders] = useState([]);
-  const [appointments, setAppointments] = useState([]);
-
-  // Auto-login if session exists in localStorage
-  useEffect(() => {
-    // Check if there is an active session
-    const activeUserId = localStorage.getItem("medbot_active_user_id");
-    const users = JSON.parse(localStorage.getItem("medbot_users") || "[]");
-    if (activeUserId && users.length > 0) {
-      const activeUser = users.find(u => u.id === activeUserId);
-      if (activeUser) {
-        setUser(activeUser);
-      }
-    }
-  }, []);
-
-  // Fetch active user data when user changes
-  useEffect(() => {
-    if (user) {
-      refreshUserData();
-    }
-  }, [user]);
-
-  const refreshUserData = () => {
-    if (!user) return;
-    setReminders(getReminders(user.id));
-    setAppointments(getAppointments(user.id));
-  };
 
   const handleLoginSuccess = (loggedInUser) => {
-    setUser(loggedInUser);
-    localStorage.setItem("medbot_active_user_id", loggedInUser.id);
+    login(loggedInUser);
     triggerToast(`Logged in successfully as ${loggedInUser.name}!`);
   };
 
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("medbot_active_user_id");
+    logout();
     setScreen('dashboard');
     triggerToast("Logged out successfully.");
   };
-
-  const handleProfileUpdate = (updatedUser) => {
-    setUser(updatedUser);
-  };
-
-  // Toast Queue Manager
-  const triggerToast = (text, type = 'success') => {
-    const id = "toast-" + Date.now();
-    setToasts(prev => [...prev, { id, text, type }]);
-    
-    // Auto remove after 4.5s
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4500);
-  };
-
-  // Check if active user is default administrator (we can simulate this based on email containing "admin")
-  const isAdmin = user && user.email.toLowerCase().includes('admin');
 
   if (!user) {
     return (
       <div className="app-container">
         <Login onLoginSuccess={handleLoginSuccess} />
-        {/* Toast Panel */}
-        <div className="toast-container">
-          {toasts.map(t => (
-            <div key={t.id} className="toast" style={{
-              borderColor: t.type === 'error' ? 'var(--accent-error)' : t.type === 'alert' ? 'var(--accent-warning)' : 'var(--primary-blue)'
-            }}>
-              {t.type === 'error' ? <AlertTriangle size={18} color="var(--accent-error)" /> : 
-               t.type === 'alert' ? <AlertTriangle size={18} color="var(--accent-warning)" /> :
-               t.type === 'info' ? <Info size={18} color="var(--primary-blue)" /> :
-               <CheckCircle size={18} color="var(--accent-emerald)" />}
-              <span style={{ fontSize: '13px' }}>{t.text}</span>
-            </div>
-          ))}
-        </div>
       </div>
     );
   }
@@ -150,7 +85,7 @@ export default function App() {
         return (
           <Profile 
             user={user} 
-            onProfileUpdate={handleProfileUpdate} 
+            onProfileUpdate={updateProfile} 
             onLogout={handleLogout} 
             triggerToast={triggerToast} 
           />
@@ -167,7 +102,7 @@ export default function App() {
   return (
     <div className="app-container">
       
-      {/* Mobile Top Header */}
+      {/* Mobile Header Bar */}
       <div style={{
         position: 'fixed',
         top: 0,
@@ -185,7 +120,7 @@ export default function App() {
       }} className="mobile-header-only">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Activity size={24} color="#0ea5e9" />
-          <span style={{ fontFamily: 'var(--font-title)', fontWeight: '800' }}>MedBot</span>
+          <span style={{ fontFamily: 'var(--font-title)', fontWeight: '800', color: '#ffffff' }}>MedBot</span>
         </div>
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -195,8 +130,8 @@ export default function App() {
         </button>
       </div>
 
-      {/* Sidebar Navigation Panel */}
-      <div className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`} style={{
+      {/* Navigation Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`} style={{
         transform: sidebarOpen ? 'translateX(0)' : undefined
       }}>
         <div className="sidebar-logo">
@@ -262,7 +197,6 @@ export default function App() {
             <PhoneCall /> Emergency Help
           </button>
 
-          {/* Admin link showing conditionally */}
           {isAdmin && (
             <button 
               onClick={() => { setScreen('admin'); setSidebarOpen(false); }}
@@ -277,7 +211,7 @@ export default function App() {
         <div className="sidebar-footer">
           <div className="user-profile-badge">
             <div className="user-avatar">
-              {user.name[0].toUpperCase()}
+              {user.name ? user.name[0].toUpperCase() : 'U'}
             </div>
             <div className="user-info">
               <span className="user-name">{user.name}</span>
@@ -289,31 +223,14 @@ export default function App() {
             <LogOut size={18} /> Log Out
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Main Screen Content Pane */}
-      <main className="main-content" style={{
-        paddingTop: '32px' // Handled dynamically in CSS media-queries
-      }}>
+      {/* Main Content Area */}
+      <main className="main-content" style={{ paddingTop: '32px' }}>
         {renderActiveScreen()}
       </main>
 
-      {/* Toast Alert Panels Overlay */}
-      <div className="toast-container">
-        {toasts.map(t => (
-          <div key={t.id} className="toast" style={{
-            borderColor: t.type === 'error' ? 'var(--accent-error)' : t.type === 'alert' ? 'var(--accent-warning)' : 'var(--primary-blue)'
-          }}>
-            {t.type === 'error' ? <AlertTriangle size={18} color="var(--accent-error)" /> : 
-             t.type === 'alert' ? <AlertTriangle size={18} color="var(--accent-warning)" /> :
-             t.type === 'info' ? <Info size={18} color="var(--primary-blue)" /> :
-             <CheckCircle size={18} color="var(--accent-emerald)" />}
-            <span style={{ fontSize: '13px' }}>{t.text}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Global CSS Inject for Mobile Headers */}
+      {/* Responsive Styles */}
       <style>{`
         .mobile-header-only {
           display: none !important;
@@ -334,7 +251,16 @@ export default function App() {
           }
         }
       `}</style>
-
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </AuthProvider>
   );
 }

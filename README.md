@@ -11,6 +11,12 @@ A comprehensive, modern React application designed to provide users with a clean
 - 🚑 **Emergency Protocol:** A dedicated safety screen that provides national support hotlines (Poison Control, Mental Health Crisis) and a nearby hospital locator using GPS or Zip Code simulation.
 - 🔔 **Reminders Dashboard:** Track daily medication schedules and upcoming doctor appointments directly from the home screen.
 
+## 🏗️ System Architecture
+
+MedBot is built using a **4-Tier Clean Modular Architecture** (UI Presentation Layer → React Context State Layer → Domain Service Layer → Data & Storage Layer).
+
+For visual flowcharts, data lifecycle diagrams, and comprehensive file maps, see [ARCHITECTURE.md](file:///c:/Sakshi%20coding/AI%20Medical%20Assistance%20Bot/ARCHITECTURE.md).
+
 ## 🎨 Design System
 
 The application features a **Premium Healthcare Design Refresh**:
